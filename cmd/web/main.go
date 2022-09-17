@@ -16,13 +16,13 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
-const webPort = "80"
+const webPort = "8000"
 
 func main() {
 	//connect to database
 	db := initDB()
 
-	db.Ping()
+	//db.Ping()
 
 	//create sessions
 
@@ -40,7 +40,7 @@ func main() {
 
 	//set config
 
-	app = Config{
+	app := Config{
 		DB: db,
 		Wait: &wg,
 		Session: session,
@@ -51,8 +51,20 @@ func main() {
 	//set up mail
 
 	//listen for web connection
+	app.serve()
+}
 
+func (app *Config) serve() {
+	srv := &http.Server{
+		Addr: webPort,
+		Handler: app.routes(),
+	}
 
+	app.InfoLog.Println("Starting server...")
+	err := srv.ListenAndServe()
+	if err != nil {
+		log.Panic("Server not starting...")
+	}
 }
 
 func initDB() *sql.DB {
